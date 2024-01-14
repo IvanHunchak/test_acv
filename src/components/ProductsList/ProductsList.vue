@@ -35,7 +35,7 @@
             :product="product"
         />
       </div>
-      <div class="pagination" v-if="!searchValue.length > 0">
+      <div class="pagination" v-if="!(searchValue.length > 0)">
         <a-button
             v-if="currentPage > 1"
             type="primary"
