@@ -1,0 +1,31 @@
+#app {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #2c3e50;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: cadetblue;
+}
+.logo_img {
+    width: 120px;
+    height: 120px;
+}
+.create_page{
+    background-color: white;
+    padding: 5px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 21px;
+    font-family: cursive;
+    color: cadetblue;
+}
+.create_page:hover{
+    opacity: 0.4;
+}
