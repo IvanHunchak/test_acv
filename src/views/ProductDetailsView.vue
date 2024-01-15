@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="product-info">
-      <p>Title: <input v-model="product?.title" placeholder="No info" /></p>
+      <p>Title: {{ product?.title || "No info" }}</p>
       <p>Description: {{ product?.description || "No info" }}</p>
       <p>Price: {{ product?.price || "No info" }}</p>
       <p>Rating: {{ product?.rating || "No info" }}</p>
