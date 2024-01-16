@@ -1,102 +1,73 @@
 <template>
-  <div class="product-details">
+  <div class="product-details" v-if="!isDeletedStatus">
     <h1>Product Details</h1>
     <div class="loading-spinner" v-if="isLoading">
-      <!-- Your loading spinner component or styles go here -->
       Loading...
     </div>
-    <div v-if="product && product.images" class="image-container">
-      <div v-for="img in product.images" :key="img.id" class="image-item">
-        <img :src="img" :alt="img.alt" class="product-image" />
+    <div v-else>
+      <div v-if="product && product.images" class="image-container">
+        <div v-for="img in product.images" :key="img.id" class="image-item">
+          <img :src="img" :alt="img.alt" class="product-image" />
+        </div>
       </div>
+      <div class="product-info">
+
+        <div class="item_wrapper">
+          <p class="item_title">Title:</p>
+          <input v-model="product.title" :disabled="!isEditable"
+            :class="{ 'editable-input': isEditable, 'readonly-input': !isEditable }" />
+        </div>
+
+        <p>Description: {{ product.description }}</p>
+
+        <p>Price: {{ product.price }}</p>
+
+        <div class="item_wrapper">
+          <p class="item_title">Rating:</p>
+          <input v-model="product.rating" :disabled="!isEditable"
+            :class="{ 'editable-input': isEditable, 'readonly-input': !isEditable }" />
+        </div>
+        <p>Brand: {{ product.brand }}</p>
+        <p>Category: {{ product.category }}</p>
+      </div>
+      <div class="btn-container">
+        <a-button v-if="isEditable" type="primary" size="small" @click="onSaveBtnPress" class="btn-uppdate">
+          Save
+        </a-button>
+        <a-button v-else type="primary" size="small" @click="onUpdateBtnPress" class="btn-uppdate">
+          Update
+        </a-button>
+
+        <a-button type="primary" size="small" @click="deleteProduct" class="btn-delete" :loading="isDeletedLoading">
+          Delete
+        </a-button>
+      </div>
+      
     </div>
-    <div class="product-info">
-      <p>Title: {{ product?.title || "No info" }}</p>
-      <p>Description: {{ product?.description || "No info" }}</p>
-      <p>Price: {{ product?.price || "No info" }}</p>
-      <p>Rating: {{ product?.rating || "No info" }}</p>
-      <p>Brand: {{ product?.brand || "No info" }}</p>
-      <p>Category: {{ product?.category || "No info" }}</p>
-    </div>
-    <div class="btn-container">
-      <a class="btn-uppdate" href="">uppdate</a>
-      <a class="btn-d elete" href="">delete</a>
-    </div>
+  </div>
+  <div v-else class="beackToMein">
+    Product deleted successfully
+    <router-link to="/">
+      <div>
+        Return to main page
+      </div>
+    </router-link>
   </div>
 </template>
 
 <script setup lang="ts"></script>
 
-<style scoped>
-.product-details {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
 
-.loading-spinner {
-  text-align: center;
-  padding: 20px;
-}
 
-.image-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.image-item {
-  flex: 0 0 30%;
-  /* Adjust the width as needed */
-}
-.image-item :hover{
-  scale: 150%;
-}
-
-.product-image {
-  width: 100%;
-  height: auto;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.product-info {
-  font-size: 16px;
-}
-
-.product-info p {
-  margin-bottom: 10px;
-}
-
-.btn-container{
-  display: flex;
-  justify-content: space-between;
-}
-
-.btn-container a {
-  text-decoration: none;
-  cursor: pointer;
-  padding: 10px 20px;
-  background-color: cadetblue;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  transition: 
-}
-
-</style>
-
+<style src="./ProductDetailsView.css" lang="css" scoped/>
 
 
 <script>
-import {defineComponent, ref, Ref} from 'vue';
-import {useRoute} from "vue-router";
+import { defineComponent, ref } from 'vue';
+import { useRoute } from "vue-router";
 import { onBeforeMount } from "@vue/runtime-core";
 import { getProductsById } from "@/services/getProductById"
-import { Product } from "@/types"
+import { deleteProductById } from "@/services/deleteProductById";
 
 
 export default defineComponent({
@@ -104,16 +75,18 @@ export default defineComponent({
   setup() {
     const product = ref();
     const isLoading = ref(false)
+    const isDeletedLoading = ref(false)
+    const isDeletedStatus = ref(false)
+    const isEditable = ref(false)
 
     const route = useRoute()
     console.log(route)
     const productId = ref(route.params.productId);
-
     onBeforeMount(async () => {
       try {
         isLoading.value = true
         console.log('productId', productId.value)
-        //fetch to get one product
+
         const result = await getProductsById(productId.value)
         if (result) {
           product.value = result;
@@ -124,15 +97,60 @@ export default defineComponent({
         isLoading.value = false
         console.log("Error", error)
       }
-      
+
     })
 
-    return {
-      product,
-    isLoading
+    const onUpdateBtnPress = () => {
+      console.log("update")
+      isEditable.value = true
     }
-  },
+
+    const onSaveBtnPress = async () => {
+      console.log("here")
+      isLoading.value = true
+
+      const result = await fetch(`https://dummyjson.com/products/${productId.value}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: product.value.title,
+          rating: product.value.rating
+        })
+      })
+  .then(res => res.json())
+  .then(res => product.value = res);
+isEditable.value = false
+isLoading.value = false
+    }
+const deleteProduct = async () => {
+  try {
+    isDeletedLoading.value = true;
+
+    const result = await deleteProductById(productId.value)
+
+    console.log('Product deleted successfully', result);
+
+    if (result?.status === 200) {
+      isDeletedStatus.value = true
+    }
+
+  } catch (error) {
+    console.log("Error deleting product", error);
+  } finally {
+    isDeletedLoading.value = false;
+  }
+};
+
+return {
+  product,
+  isLoading,
+  isDeletedLoading,
+  deleteProduct,
+  isDeletedStatus,
+  isEditable,
+  onUpdateBtnPress,
+  onSaveBtnPress,
+}
+},
 });
 </script>
-
-
