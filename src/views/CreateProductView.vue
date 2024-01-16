@@ -1,74 +1,104 @@
 <template>
-  <div class="create">
-    <h1>This is an about page</h1>
+  <div v-if="!isCreated">
+    <h1>Add New Product</h1>
+    <form @submit.prevent="addProduct" class="productLable">
+      <label for="title">Title:</label>
+      <input v-model="newProduct.title" type="text" required>
 
-    <div class="product-form">
-      <h2>Add a New Product</h2>
-      <div>
-        <div class="form-group">
-          <label for="image">Product Image:</label>
-          <input type="file" id="image" name="image" accept="image/*">
-        </div>
+      <label>Category:</label>
+      <a-select v-model:value="newProduct.category" show-search placeholder="Select a category" style="width: 200px">
+        <a-select-option v-for="category in categories" :key="category" :value="category">
+          {{ category }}
+        </a-select-option>
+      </a-select>
 
-        <div class="form-group">
-          <label for="title">Product Title:</label>
-          <input type="text" id="title" name="title" required>
-        </div>
+      <label for="description">Description:</label>
+      <input v-model="newProduct.description" type="text" required>
 
-        <div class="form-group">
-          <label for="description">Product Description:</label>
-          <textarea id="description" name="description" rows="4" required></textarea>
-        </div>
+      <label class="price">Price:</label>
+      <input v-model="newProduct.price" type="text" required>
 
-        <div class="form-group">
-          <label for="price">Product Price:</label>
-          <input type="number" id="price" name="price" step="0.01" required>
-        </div>
-        <button type="submit">Add Product</button>
-      </div>
-    </div>
+      <label for="image">Image:</label>
+      <input type="file" id="image" name="image" accept="image/*">
+      
+        
+
+      <button  type="submit">Add Product</button>
+    </form>
   </div>
+
+  <div v-else class="beackToMein">
+      Product add successfully
+      <router-link to="/">
+        <div>
+          Return to main page
+        </div>
+      </router-link>
+    </div>
+
 </template>
 
-<style scoped>
-.product-form {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+<style src="./CreatedProductView.css" lang="css" scoped/>
+
+<script lang="ts">
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+
+interface Product {
+  title: string;
+  description: string;
+  price: number;
+  category: string;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
+export default {
+  setup() {
+    const isCreated = ref(false)
+    const newProduct = ref<Product>({
+      title: '',
+      description: '',
+      price: 0,
+      category: ''
+      
+    });
 
-label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
+    const categories = ref<string[]>([]);
 
-input {
-  width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-}
+    onMounted(async () => {
+      try {
+        const response = await axios.get('https://dummyjson.com/products/categories');
+        categories.value = response.data;
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    });
 
-button {
-  background-color: #4caf50;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-}
+    const addProduct = async (): Promise<void> => {
+      try {
+        const response = await axios.post('https://dummyjson.com/products/add', newProduct.value, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-button:hover {
-  background-color: #45a049;
-}
-</style>
+        console.log('Product added successfully:', response);
+
+        if (response.status === 200) {
+          isCreated.value = true
+        }
+      
+        newProduct.value = { title: '', description: '', price: 0, category: '' };
+      } catch (error) {
+        console.error('Error adding product:', error);
+      }
+    };
+
+    return {
+      newProduct,
+      categories,
+      addProduct,
+      isCreated
+    };
+  },
+};
+</script>
